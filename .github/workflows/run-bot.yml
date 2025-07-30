@@ -1,9 +1,12 @@
 name: Run Alive Blog Bot
 
 on:
-  workflow_dispatch:   # Manual run
+  workflow_dispatch:
   schedule:
-    - cron: "0 14 * * *"  # Runs daily at 10 AM EST
+    - cron: "0 14 * * *"
+
+permissions:
+  contents: write  # ✅ Allow pushing changes
 
 jobs:
   run-bot:
@@ -12,6 +15,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -33,3 +38,4 @@ jobs:
         git add linkedin_posts.csv
         git commit -m "Update LinkedIn posts CSV" || echo "No changes to commit"
         git push
+
