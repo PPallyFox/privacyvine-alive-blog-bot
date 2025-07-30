@@ -1,18 +1,19 @@
-
 import feedparser
-import openai
 import os
 import csv
 from datetime import date
+from openai import OpenAI
 
 # ===== CONFIG =====
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 RSS_FEED = "https://www.bleepingcomputer.com/feed/"
 CSV_FILE = "linkedin_posts.csv"
 
+# Create OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 # ===== AI SUMMARY =====
 def summarize_article(title, link, description):
-    openai.api_key = OPENAI_API_KEY
     prompt = f"""
     Summarize this cybersecurity news in a professional LinkedIn tone.
     Title: {title}
@@ -27,16 +28,16 @@ def summarize_article(title, link, description):
     End with: "Patrick used AI to automate this post."
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}]
     )
     
-    return response.choices[0].message["content"]
+    return response.choices[0].message.content.strip()
 
 # ===== WRITE TO CSV =====
 def write_csv(content):
-    # If CSV doesn't exist, create it with header
+    # Check if CSV exists
     file_exists = os.path.isfile(CSV_FILE)
     
     with open(CSV_FILE, mode="a", newline='', encoding="utf-8") as file:
@@ -48,11 +49,20 @@ def write_csv(content):
 # ===== MAIN BOT =====
 def run_bot():
     feed = feedparser.parse(RSS_FEED)
-    top_story = feed.entries[0]
     
-    summary = summarize_article(top_story.title, top_story.link, top_story.description)
+    if not feed.entries:
+        print("⚠️ No entries found in RSS feed.")
+        return
+    
+    top_story = feed.entries[0]
+    summary = summarize_article(
+        top_story.title, 
+        top_story.link, 
+        getattr(top_story, "description", "")
+    )
+    
     write_csv(summary)
-    print(f"✅ LinkedIn post added for {top_story.title}")
+    print(f"✅ LinkedIn post added for: {top_story.title}")
 
 if __name__ == "__main__":
     run_bot()
