@@ -1,32 +1,30 @@
+
 import feedparser
-import requests
 import openai
-from datetime import date
 import os
+import csv
+from datetime import date
 
-# ===== CONFIGURATION =====
+# ===== CONFIG =====
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SQUARESPACE_API_KEY = os.getenv("SQUARESPACE_API_KEY")
-SQUARESPACE_SITE_ID = os.getenv("SQUARESPACE_SITE_ID")
-
 RSS_FEED = "https://www.bleepingcomputer.com/feed/"
-MEMORY_FILE = "last_posted.txt"
+CSV_FILE = "linkedin_posts.csv"
 
-# ===== AI SUMMARIZATION =====
+# ===== AI SUMMARY =====
 def summarize_article(title, link, description):
     openai.api_key = OPENAI_API_KEY
     prompt = f"""
-    Summarize this cybersecurity news story in a professional tone for the PrivacyVine Alive Blog.
+    Summarize this cybersecurity news in a professional LinkedIn tone.
     Title: {title}
     Link: {link}
     Description: {description}
-    
-    Provide:
-    - A concise summary (2-3 sentences)
+
+    Format:
+    - Headline
+    - 2-3 sentence summary
     - Why it matters
-    - 1 security tip
-    
-    End with: 'Patrick used AI to automate this post.'
+    - Security tip
+    End with: "Patrick used AI to automate this post."
     """
 
     response = openai.ChatCompletion.create(
@@ -36,57 +34,25 @@ def summarize_article(title, link, description):
     
     return response.choices[0].message["content"]
 
-# ===== PUBLISH TO SQUARESPACE =====
-def publish_to_squarespace(title, body):
-    url = f"https://api.squarespace.com/1.0/sites/{SQUARESPACE_SITE_ID}/blog-posts"
-    headers = {
-        "Authorization": f"Bearer {SQUARESPACE_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "title": title,
-        "body": body,
-        "publishOn": date.today().isoformat(),
-        "state": "PUBLISHED"
-    }
-    r = requests.post(url, json=data, headers=headers)
-    if r.status_code == 201:
-        print(f"✅ Published: {title}")
-    else:
-        print(f"❌ Error: {r.status_code}, {r.text}")
+# ===== WRITE TO CSV =====
+def write_csv(content):
+    # If CSV doesn't exist, create it with header
+    file_exists = os.path.isfile(CSV_FILE)
+    
+    with open(CSV_FILE, mode="a", newline='', encoding="utf-8") as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(["Date", "Post Content"])
+        writer.writerow([date.today().isoformat(), content])
 
-# ===== MEMORY CHECK =====
-def already_posted(link):
-    if os.path.exists(MEMORY_FILE):
-        with open(MEMORY_FILE, "r") as f:
-            last_link = f.read().strip()
-        return last_link == link
-    return False
-
-def save_posted(link):
-    with open(MEMORY_FILE, "w") as f:
-        f.write(link)
-
-# ===== MAIN BOT FUNCTION =====
+# ===== MAIN BOT =====
 def run_bot():
     feed = feedparser.parse(RSS_FEED)
     top_story = feed.entries[0]
-
-    if already_posted(top_story.link):
-        print("⏩ No new article. Skipping...")
-        return
     
     summary = summarize_article(top_story.title, top_story.link, top_story.description)
-    
-    post_body = f"""
-    <h2>{top_story.title}</h2>
-    <p>{summary}</p>
-    <p>Source: <a href="{top_story.link}">{top_story.link}</a></p>
-    """
-    
-    publish_to_squarespace(top_story.title, post_body)
-    save_posted(top_story.link)
+    write_csv(summary)
+    print(f"✅ LinkedIn post added for {top_story.title}")
 
-# ===== RUN BOT =====
 if __name__ == "__main__":
     run_bot()
