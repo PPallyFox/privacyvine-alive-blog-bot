@@ -17,3 +17,12 @@ Cybersecurity experts are shedding light on ClickFix and FileFix attacks that ex
 **Security tip**: Regularly educate employees on recognizing social engineering tactics and implement comprehensive security solutions that monitor and mitigate these risks.
 
 Patrick used AI to automate this post."
+2025-08-01,"**Headline:** AI-Powered Cursor IDE Exposes Vulnerability to Prompt-Injection Attacks
+
+A recently discovered vulnerability, dubbed CurXecute, affects nearly all versions of the AI-driven code editor Cursor, enabling potential attackers to execute remote code with developer privileges. Researchers warn that this flaw could lead to severe security breaches if left unaddressed.
+
+This issue underscores the importance of rigorously testing AI applications for vulnerabilities, especially as their adoption grows across the software development landscape. It serves as a reminder for organizations to remain vigilant and proactive in their cybersecurity strategies.
+
+**Security Tip:** Ensure software tools are regularly updated and review security advisories for any newly discovered vulnerabilities. 
+
+Patrick used AI to automate this post."
