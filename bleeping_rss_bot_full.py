@@ -91,7 +91,18 @@ def run_bot():
         top_story.link, 
         full_content
     )
+
+    # ===== PREVIEW OUTPUT IN ACTIONS LOG =====
+    print("\n===== SCRAPED ARTICLE PREVIEW =====")
+    print(full_content[:500] + "...\n")  # show first 500 chars
+    print("===== GPT SUMMARY =====")
+    print(summary)
     
+    write_csv(summary)
+    print(f"✅ LinkedIn post added for: {top_story.title}")
+
+if __name__ == "__main__":
+    run_bot()
     write_csv(summary)
     print(f"✅ LinkedIn post added for: {top_story.title}")
 
