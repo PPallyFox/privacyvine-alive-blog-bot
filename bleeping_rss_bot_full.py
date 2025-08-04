@@ -26,9 +26,8 @@ def fetch_full_article(link):
         # BleepingComputer articles are inside div.articleBody or div.articleBodyContent
         article_body = soup.find("div", class_="articleBody") or soup.find("div", class_="articleBodyContent")
         if not article_body:
-            return ""  # Fallback if structure changes
+            return ""
         
-        # Extract clean text
         paragraphs = article_body.find_all("p")
         text = "\n".join(p.get_text(strip=True) for p in paragraphs)
         return text
@@ -98,11 +97,6 @@ def run_bot():
     print("===== GPT SUMMARY =====")
     print(summary)
     
-    write_csv(summary)
-    print(f"✅ LinkedIn post added for: {top_story.title}")
-
-if __name__ == "__main__":
-    run_bot()
     write_csv(summary)
     print(f"✅ LinkedIn post added for: {top_story.title}")
 
