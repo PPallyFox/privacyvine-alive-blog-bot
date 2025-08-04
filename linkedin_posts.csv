@@ -44,3 +44,12 @@ OpenAI is reportedly not only advancing its upcoming GPT-5 model but is also set
 **Security tip:** As AI technologies become more accessible, it's crucial for organizations to implement stringent security measures when integrating these models, including proper validation of data inputs and outputs to mitigate potential vulnerabilities.
 
 Patrick used AI to automate this post."
+2025-08-04,"**Headline:** Emerging Plague Linux Malware Compromises SSH Security
+
+Recent reports reveal a stealthy Linux malware, referred to as Plague, that has been undetected for over a year, enabling attackers to maintain persistent SSH access while circumventing authentication protocols on affected systems. This poses significant risks as malicious actors can exploit compromised devices without leaving traces of their SSH sessions.
+
+**Why it matters:** The longevity and stealth of the Plague malware highlight the evolving sophistication of cyber threats targeting Linux environments. Organizations must remain vigilant and proactive to safeguard their infrastructure against such persistent and elusive attacks.
+
+**Security tip:** Regularly update security protocols, implement intrusion detection systems, and monitor SSH access logs to identify and respond to any suspicious activities promptly.
+
+Patrick used AI to automate this post."
