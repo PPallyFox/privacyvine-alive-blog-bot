@@ -33,17 +33,19 @@ def fetch_full_article(link):
         # BleepingComputer article container
         article_body = soup.find("div", class_="articleBody") or soup.find("div", class_="articleBodyContent")
         if not article_body:
+            print("⚠️ RSS FALLBACK — Could not find full article content.")
             return ""  # Fallback if structure changes
         
         paragraphs = article_body.find_all("p")
         text = "\n".join(p.get_text(strip=True) for p in paragraphs)
 
-        # Show preview in Actions log
+        print("✅ FULL ARTICLE SCRAPED SUCCESSFULLY")
         print("\n===== SCRAPED ARTICLE PREVIEW =====")
         print(text[:500] + ("..." if len(text) > 500 else ""))
         print("===================================\n")
+
         return text
 
     except Exception as e:
-        print(f"⚠️ Failed to fetch article: {e}")
+        print(f"⚠️ RSS FALLBACK — Failed to fetch article: {e}")
         return ""
