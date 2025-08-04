@@ -37,6 +37,11 @@ def fetch_full_article(link):
         
         paragraphs = article_body.find_all("p")
         text = "\n".join(p.get_text(strip=True) for p in paragraphs)
+
+        # Show preview in Actions log
+        print("\n===== SCRAPED ARTICLE PREVIEW =====")
+        print(text[:500] + ("..." if len(text) > 500 else ""))
+        print("===================================\n")
         return text
 
     except Exception as e:
