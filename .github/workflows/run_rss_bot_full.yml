@@ -2,8 +2,8 @@ name: Run Full Article RSS Bot
 
 on:
   schedule:
-    - cron: "0 9 * * *"  # daily at 9:00 AM UTC (adjust as needed)
-  workflow_dispatch:      # manual trigger
+    - cron: "0 9 * * *"  # daily at 9:00 AM UTC
+  workflow_dispatch:
 
 jobs:
   run-bot:
@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
@@ -28,13 +30,13 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         python bleeping_rss_bot_full.py
-          - name: Commit updated CSV
+
+    - name: Commit updated CSV
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add linkedin_posts.csv
-        git commit -m "Update LinkedIn posts CSV"
+        git commit -m "Update LinkedIn posts CSV" || echo "No changes to commit"
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
