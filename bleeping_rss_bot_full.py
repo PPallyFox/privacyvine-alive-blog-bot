@@ -13,8 +13,9 @@ from googleapiclient.discovery import build
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 RSS_FEED = "https://www.bleepingcomputer.com/feed/"
 SERVICE_ACCOUNT_FILE = "service_account.json"  # Created by GitHub Actions
-SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"        # Replace with actual Google Sheet ID
-RANGE_NAME = "Sheet1!A:E"                      # Now has 5 columns
+SPREADSHEET_ID = "1cf6_ckhsGATV1L-jybALBqItmLlABf0gURrA-f6sY4g"
+RANGE_NAME = "LinkedIn_Posts!A:E"
+
 
 # ===== GOOGLE SHEETS SETUP =====
 credentials = service_account.Credentials.from_service_account_file(
