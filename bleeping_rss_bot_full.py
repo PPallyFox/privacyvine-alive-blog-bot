@@ -14,7 +14,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 RSS_FEED = "https://www.bleepingcomputer.com/feed/"
 SERVICE_ACCOUNT_FILE = "service_account.json"  # Created by GitHub Actions
 SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"        # Replace with actual Google Sheet ID
-RANGE_NAME = "Sheet1!A:D"                      # Now has 4 columns
+RANGE_NAME = "Sheet1!A:E"                      # Now has 5 columns
 
 # ===== GOOGLE SHEETS SETUP =====
 credentials = service_account.Credentials.from_service_account_file(
@@ -96,8 +96,8 @@ End with: "Patrick used AI to automate this post."
     return response.choices[0].message.content.strip()
 
 # ===== WRITE TO GOOGLE SHEETS =====
-def write_to_google_sheet(date_str, content, status):
-    values = [[date_str, content, "Draft", status]]
+def write_to_google_sheet(date_str, content, status, url):
+    values = [[date_str, content, "Draft", status, url]]
     body = {'values': values}
     result = sheet.values().append(
         spreadsheetId=SPREADSHEET_ID,
@@ -113,4 +113,26 @@ def run_bot():
     try:
         feed = feedparser.parse(RSS_FEED)
         if not feed.entries:
-            print("⚠️ No entries found ")
+            print("⚠️ No entries found in RSS feed.")
+            write_to_google_sheet(date.today().isoformat(), "No articles found", "Failed", "")
+            return
+
+        top_story = feed.entries[0]
+        full_article = fetch_full_article(top_story.link)
+
+        if full_article:
+            summary = summarize_article(top_story.title, top_story.link, full_article)
+        else:
+            print("ℹ️ Using RSS description as fallback.")
+            rss_description = getattr(top_story, "description", "")
+            summary = summarize_article(top_story.title, top_story.link, rss_description)
+
+        write_to_google_sheet(date.today().isoformat(), summary, "Success", top_story.link)
+        print(f"✅ LinkedIn post added for: {top_story.title}")
+
+    except Exception as e:
+        print(f"❌ Bot failed: {e}")
+        write_to_google_sheet(date.today().isoformat(), f"Error: {e}", "Failed", "")
+
+if __name__ == "__main__":
+    run_bot()
