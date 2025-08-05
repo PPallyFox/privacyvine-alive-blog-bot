@@ -1,5 +1,4 @@
 import os
-import csv
 import random
 import time
 import feedparser
@@ -7,13 +6,25 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import date
 from openai import OpenAI
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
 # ===== CONFIG =====
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 RSS_FEED = "https://www.bleepingcomputer.com/feed/"
-CSV_FILE = "linkedin_posts.csv"
+SERVICE_ACCOUNT_FILE = "service_account.json"  # Created by GitHub Actions
+SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"        # Replace with actual Google Sheet ID
+RANGE_NAME = "Sheet1!A:D"                      # Now has 4 columns
 
-# Create OpenAI client
+# ===== GOOGLE SHEETS SETUP =====
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE,
+    scopes=['https://www.googleapis.com/auth/spreadsheets']
+)
+service = build('sheets', 'v4', credentials=credentials)
+sheet = service.spreadsheets()
+
+# ===== OPENAI CLIENT =====
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ===== FETCH FULL ARTICLE =====
@@ -33,7 +44,6 @@ def fetch_full_article(link):
 
         print(f"🔍 Fetching full article for: {link}")
 
-        # First request attempt
         response = requests.get(link, headers=headers, timeout=10)
         if response.status_code == 403:
             print("⚠️ 403 Forbidden — retrying with different headers...")
@@ -42,7 +52,6 @@ def fetch_full_article(link):
             response = requests.get(link, headers=headers, timeout=10)
 
         response.raise_for_status()
-
         soup = BeautifulSoup(response.text, "html.parser")
         article_body = soup.find("div", class_="articleBody") or soup.find("div", class_="articleBodyContent")
 
@@ -57,7 +66,6 @@ def fetch_full_article(link):
         print("\n===== SCRAPED ARTICLE PREVIEW =====")
         print(text[:500] + ("..." if len(text) > 500 else ""))
         print("===================================\n")
-
         return text
 
     except Exception as e:
@@ -81,41 +89,28 @@ Format:
 
 End with: "Patrick used AI to automate this post."
 """
-
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}]
     )
     return response.choices[0].message.content.strip()
 
-# ===== WRITE TO CSV =====
-def write_csv(content):
-    file_exists = os.path.isfile(CSV_FILE)
-    with open(CSV_FILE, mode="a", newline='', encoding="utf-8") as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(["Date", "Post Content"])
-        writer.writerow([date.today().isoformat(), content])
+# ===== WRITE TO GOOGLE SHEETS =====
+def write_to_google_sheet(date_str, content, status):
+    values = [[date_str, content, "Draft", status]]
+    body = {'values': values}
+    result = sheet.values().append(
+        spreadsheetId=SPREADSHEET_ID,
+        range=RANGE_NAME,
+        valueInputOption='RAW',
+        insertDataOption='INSERT_ROWS',
+        body=body
+    ).execute()
+    print(f"✅ {result.get('updates').get('updatedRows')} row(s) appended to Google Sheet.")
 
 # ===== MAIN BOT =====
 def run_bot():
-    feed = feedparser.parse(RSS_FEED)
-    if not feed.entries:
-        print("⚠️ No entries found in RSS feed.")
-        return
-
-    top_story = feed.entries[0]
-    full_article = fetch_full_article(top_story.link)
-
-    if full_article:
-        summary = summarize_article(top_story.title, top_story.link, full_article)
-    else:
-        print("ℹ️ Using RSS description as fallback.")
-        rss_description = getattr(top_story, "description", "")
-        summary = summarize_article(top_story.title, top_story.link, rss_description)
-
-    write_csv(summary)
-    print(f"✅ LinkedIn post added for: {top_story.title}")
-
-if __name__ == "__main__":
-    run_bot()
+    try:
+        feed = feedparser.parse(RSS_FEED)
+        if not feed.entries:
+            print("⚠️ No entries foun
