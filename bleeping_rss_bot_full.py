@@ -113,4 +113,4 @@ def run_bot():
     try:
         feed = feedparser.parse(RSS_FEED)
         if not feed.entries:
-            print("⚠️ No entries foun
+            print("⚠️ No entries found ")
